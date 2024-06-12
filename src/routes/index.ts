@@ -1,7 +1,7 @@
 import { Router } from "express";
 import fs from "fs";
 
-import { PDFLoader } from "langchain/document_loaders/fs/pdf";
+import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 
 // **** Variables **** //
 
@@ -12,17 +12,9 @@ apiRouter.get("/", async (req, res) => {
   // 83 pages
   const bema = new PDFLoader("documents/bema.pdf", {
     splitPages: false,
-  });
-
-  await bema.load();
-
-  await new Promise((resolve) => {
-    setTimeout(resolve, 2000);
-  });
-
-  res.send("Hello World!");
-});
-
-// **** Export default **** //
+  })
+  const pdf = await bema.load()
+  res.send(pdf.map((page) => page.pageContent))
+})
 
 export default apiRouter;
