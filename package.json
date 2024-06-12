@@ -44,7 +44,8 @@
     "morgan": "^1.10.0",
     "pdf-parse": "^1.1.1",
     "pdfjs": "^2.5.3",
-    "ts-command-line-args": "^2.5.1"
+    "ts-command-line-args": "^2.5.1",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.7",
