@@ -1,5 +1,6 @@
 import { Router } from "express";
 import z from "zod";
+import "dotenv/config";
 
 import { MemoryVectorStore } from "langchain/vectorstores/memory";
 import { OpenAIEmbeddings } from "@langchain/openai";
@@ -12,21 +13,34 @@ apiRouter.get("/", async (req, res) => {
   const bema = new PDFLoader("documents/KZBV_BEMA-2023-07-01.pdf", {
     splitPages: false,
   });
+  // Load the PDF document
   const pdfDocuments = await bema.load();
 
-  const vectorStore = await MemoryVectorStore.fromDocuments(
-    pdfDocuments,
+  // Create a vector store
+  const vectorStore = new MemoryVectorStore(
     new OpenAIEmbeddings({
       apiKey: process.env.OPENAI_API_KEY,
     })
   );
 
-  const result = await vectorStore.similaritySearch(
-    "Kieferorthopädische Behandlung",
-    5
-  );
+  // Define the number of pages to process in each batch
+  const batchSize = 2; // Adjust this based on your testing
+  const results = [];
 
-  res.send(result);
+  // Process the document in batches
+  for (let i = 0; i < pdfDocuments.length; i += batchSize) {
+    const batch = pdfDocuments.slice(i, i + batchSize);
+    await vectorStore.addDocuments(batch);
+
+    // Perform similarity search on the current batch
+    const batchResults = await vectorStore.similaritySearch(
+      "Kieferorthopädische Behandlung",
+      5
+    );
+    results.push(...batchResults);
+  }
+
+  res.send(results);
 });
 
 const treatmentSchema = z.object({
