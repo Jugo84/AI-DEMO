@@ -9,9 +9,12 @@ const apiRouter = Router();
 
 // @eslint-ignore-next-line
 apiRouter.get("/", async (req, res) => {
+  // 83 pages
   const bema = new PDFLoader("documents/bema.pdf", {
     splitPages: false,
   });
+
+  await bema.load();
 
   await new Promise((resolve) => {
     setTimeout(resolve, 2000);
