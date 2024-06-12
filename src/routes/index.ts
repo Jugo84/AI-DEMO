@@ -7,7 +7,6 @@ import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
 
 const apiRouter = Router();
 
-// @eslint-ignore-next-line
 apiRouter.get("/", async (req, res) => {
   // 83 pages
   const bema = new PDFLoader("documents/bema.pdf", {
