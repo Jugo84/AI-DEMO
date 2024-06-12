@@ -1,11 +1,15 @@
 import { Router } from "express";
+import fs from "fs";
 
 // **** Variables **** //
 
 const apiRouter = Router();
 
 apiRouter.get("/", async (req, res) => {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  const bemaFile = fs.readFileSync("./documents/bema.pdf", "utf8");
+  const goäFile = fs.readFileSync("./documents/goä.pdf", "utf8");
+  const gozFile = fs.readFileSync("./documents/goz.pdf", "utf8");
+
   res.send("Hello World!");
 });
 
