@@ -1,19 +1,32 @@
 import { Router } from "express";
 import z from "zod";
 
+import { MemoryVectorStore } from "langchain/vectorstores/memory";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf";
-
-// **** Variables **** //
 
 const apiRouter = Router();
 
 apiRouter.get("/", async (req, res) => {
-  // 83 pages
+  // bema with 83 pages
   const bema = new PDFLoader("documents/KZBV_BEMA-2023-07-01.pdf", {
     splitPages: false,
   });
-  const pdf = await bema.load();
-  res.send(pdf.map((page) => page.pageContent));
+  const pdfDocuments = await bema.load();
+
+  const vectorStore = await MemoryVectorStore.fromDocuments(
+    pdfDocuments,
+    new OpenAIEmbeddings({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+  );
+
+  const result = await vectorStore.similaritySearch(
+    "Kieferorthopädische Behandlung",
+    5
+  );
+
+  res.send(result);
 });
 
 const treatmentSchema = z.object({
@@ -36,10 +49,7 @@ const treatmentSchema = z.object({
     .array(),
 });
 
-const categorySchema = z.object({
-  treatments: z.array(treatmentSchema),
-});
-const responseSchema = z.array(categorySchema);
+const responseSchema = z.array(treatmentSchema);
 
 //const initialParser = StructuredOutputParser.fromZodSchema(responseSchema);
 
