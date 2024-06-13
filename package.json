@@ -1,10 +1,11 @@
 {
-  "name": "AI-DEMO",
+  "name": "ai-demo",
   "version": "0.0.0",
   "scripts": {
     "build": "npx ts-node build.ts",
     "lint": "npx eslint --ext .ts src/",
     "lint:tests": "npx eslint --ext .ts spec/",
+    "pretty": "prettier --write \"./**/*.{ts,tsx,json,svg,js,jsx,css}\"",
     "start": "node -r module-alias/register ./dist --env=production",
     "dev": "nodemon",
     "test": "nodemon --config ./spec/nodemon.json",
@@ -45,6 +46,8 @@
     "morgan": "^1.10.0",
     "pdf-parse": "^1.1.1",
     "pdfjs": "^2.5.3",
+    "prettier": "^3.3.2",
+    "tiktoken": "^1.0.15",
     "ts-command-line-args": "^2.5.1",
     "zod": "^3.23.8"
   },
