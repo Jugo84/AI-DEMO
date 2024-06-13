@@ -32,7 +32,7 @@ apiRouter.get('/', async (req, res) => {
     // add snippets to the vector store
     await vectorStore.addDocuments(snippets)
 
-    const results = await vectorStore.similaritySearch('Kieferorthopädische Behandlung', 5)
+    const results = await vectorStore.similaritySearch('Röntgendiagnostik', 5)
 
     res.status(200).json({
         results,
