@@ -19,6 +19,7 @@ apiRouter.get('/', async (req, res) => {
     const splitter = new RecursiveCharacterTextSplitter({
         chunkSize: 500,
         chunkOverlap: 100,
+        separators: ['.', '!', '?', '\n'],
     })
     const snippets = await splitter.createDocuments(pdfDocuments.map((page) => page.pageContent))
 
