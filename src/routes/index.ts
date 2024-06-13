@@ -5,17 +5,22 @@ import 'dotenv/config'
 import { MemoryVectorStore } from 'langchain/vectorstores/memory'
 import { OpenAIEmbeddings } from '@langchain/openai'
 import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf'
+import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
 import { countTokens } from '@src/common/countTokens'
 
 const apiRouter = Router()
 
 apiRouter.get('/', async (req, res) => {
-    // bema with 83 pages
-    const bema = new PDFLoader('documents/KZBV_BEMA-2023-07-01.pdf', {
-        splitPages: false,
-    })
-    // Load the PDF document
+    // Load the PDF document - bema with 83 pages
+    const bema = new PDFLoader('documents/KZBV_BEMA-2023-07-01.pdf')
     const pdfDocuments = await bema.load()
+
+    // split the document into smaller snippets
+    const splitter = new RecursiveCharacterTextSplitter({
+        chunkSize: 500,
+        chunkOverlap: 100,
+    })
+    const snippets = await splitter.createDocuments(pdfDocuments.map((page) => page.pageContent))
 
     // Create a vector store
     const vectorStore = new MemoryVectorStore(
@@ -24,21 +29,30 @@ apiRouter.get('/', async (req, res) => {
         })
     )
 
-    // Define the number of pages to process in each batch
-    const batchSize = 2 // Adjust this based on your testing
-    const results = []
+    // add snippets to the vector store
+    await vectorStore.addDocuments(snippets)
 
-    // Process the document in batches
-    for (let i = 0; i < pdfDocuments.length; i += batchSize) {
-        const batch = pdfDocuments.slice(i, i + batchSize)
-        await vectorStore.addDocuments(batch)
+    const results = await vectorStore.similaritySearch('Kieferorthopädische Behandlung', 5)
 
-        // Perform similarity search on the current batch
-        const batchResults = await vectorStore.similaritySearch('Kieferorthopädische Behandlung', 5)
-        results.push(...batchResults)
-    }
+    res.status(200).json({
+        results,
+    })
+})
 
-    res.send(results)
+apiRouter.get('/costs', async (req, res) => {
+    // Load document - 83 pages
+    const bema = new PDFLoader('documents/KZBV_BEMA-2023-07-01.pdf', {
+        splitPages: false,
+        parsedItemSeparator: '',
+    })
+    const pdf = await bema.load()
+    const tokens = pdf.map((page) => countTokens(page.pageContent))
+    const sum = tokens.reduce((a, b) => a + b, 0)
+    res.status(200).json({
+        pages: pdf.length,
+        tokens: sum,
+        costs: (sum * 0.13) / 1000000,
+    })
 })
 
 const treatmentSchema = z.object({
@@ -55,25 +69,6 @@ const treatmentSchema = z.object({
             description: 'Treatment number or ids of the non-combineable treatments',
         })
         .array(),
-})
-
-apiRouter.get('/costs', async (req, res) => {
-    // Load document
-    // 83 pages
-    const bema = new PDFLoader('documents/KZBV_BEMA-2023-07-01.pdf', {
-        splitPages: false,
-        parsedItemSeparator: '',
-    })
-    // split document
-
-    const pdf = await bema.load()
-    const tokens = pdf.map((page) => countTokens(page.pageContent))
-    const sum = tokens.reduce((a, b) => a + b, 0)
-    res.status(200).json({
-        pages: pdf.length,
-        tokens: sum,
-        costs: (sum * 0.13) / 1000000,
-    })
 })
 
 const responseSchema = z.array(treatmentSchema)
